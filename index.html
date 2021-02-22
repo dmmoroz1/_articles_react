@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React</title>
+
+    <link rel="stylesheet" href="css/materialize.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app"></div>
+
+    <script src="js/materialize.min.js"></script>
+
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <script type="text/babel">
+        const e = React.createElement;
+
+        function Content() {
+            return (
+                <div className="wrapper">
+                    <div className="content">
+                        <div className="content__slider"><Slider/></div>
+                        <div className="content__articles"><Articles/></div>
+                    </div>
+                </div>
+            )
+        }
+
+        class Slider extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    carousel: null,
+                    slides: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                }
+            }
+
+            carouselItems() {
+                return (
+                    this.state.slides.map(slide => (
+                        <div className="carousel-item" key={ slide }>
+                            <img src={ "http://placeimg.com/200/200/" + slide }/>
+                        </div>
+                    ))
+                )
+            }
+
+            componentDidMount() {
+                const c = document.querySelector('.carousel')
+                this.state.carousel = M.Carousel.init(c, {
+                    fullWidth: true,
+                    padding: 5,
+                })
+            }
+
+            componentWillUnmount() {
+                if ( this.state.carousel && this.state.carousel.destroy ) {
+                    this.state.carousel.destroy()
+                }
+            }
+            
+            render() {
+                return (
+                    <div className="slider">
+                        <div className="slider__arrow" onClick={ () => this.state.carousel.prev() }>
+                            <i className="chevron chevron_left"></i>
+                        </div>
+                        <div className="slider__body">
+                            <div className="carousel">{ this.carouselItems() }</div>
+                        </div>
+                        <div className="slider__arrow" onClick={ () => this.state.carousel.next() }>
+                            <i className="chevron chevron_right"></i>
+                        </div>
+                    </div>
+                )
+            }
+        }
+        
+        class Articles extends React.Component{
+            constructor(props) {
+                super(props)
+                this.state = {
+                    articles: [
+                        { id: 0, title: 'Article5', date: new Date("2021, 01, 21"), category: 'tech',   text: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Repellendus omnis quo iure dolorum corporis, voluptate mollitia nostrum, est sunt inventore nulla eveniet accusantium minus, cupiditate tempore voluptatibus illum adipisci explicabo!' },
+                        { id: 1, title: 'Article3', date: new Date("2021, 01, 20"), category: 'nature', text: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Maxime reiciendis aspernatur repudiandae necessitatibus sunt vero, quis facere, cum totam incidunt deleniti praesentium minima non distinctio, dolorum commodi consectetur sint dolores? A, cumque tempora perspiciatis itaque ut voluptates laudantium obcaecati cupiditate, natus molestiae, saepe eaque veritatis ratione ex sit dignissimos sequi deserunt. Inventore fugit laudantium fugiat at reiciendis sed non minus.' },
+                        { id: 2, title: 'Article4', date: new Date("2021, 01, 20"), category: 'tech',   text: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Accusamus ducimus numquam earum voluptates cumque eius dignissimos voluptatibus, quia nisi dolore ipsum consequuntur molestias ab repudiandae eveniet perferendis recusandae distinctio ex.' },
+                        { id: 3, title: 'Article1', date: new Date("2021, 01, 19"), category: 'nature', text: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum voluptates nobis quia enim dolore in, voluptatibus obcaecati unde facere similique delectus accusantium hic assumenda voluptate architecto tenetur, ipsum, veniam consequuntur!' },
+                        { id: 4, title: 'Article2', date: new Date("2021, 01, 19"), category: 'people', text: 'Lorem ipsum dolor sit, amet consectetur adipisicing elit. Quo commodi iure neque earum hic libero, officia tenetur in modi! Soluta, fuga hic quas architecto illo quia ipsum vitae laborum obcaecati!' },
+                    ],
+                    filters: {
+                        search: '',
+                        order: 'date',
+                        category: '',
+                    },
+                }
+                this.sortBy = this.sortBy.bind(this)
+                this.handleFiltersChange = this.handleFiltersChange.bind(this)
+            }
+
+            getCategories() {
+                return this.state.articles.map(item => item.category).filter((item, idx, self) => {
+                    return self.indexOf(item) === idx
+                })
+            }
+
+            sortBy(a, b) {
+                if ( this.state.filters.order === 'date' ) {
+                    return b.date - a.date
+                }
+                if ( a.title < b.title ) {
+                    return -1
+                }
+                if ( a.title > b.title ) {
+                    return 1
+                }
+                return 0
+            }
+
+            getArticleList() {
+                let res = this.state.articles
+
+                if ( this.state.filters.search ) {
+                    res = res.filter(article => {
+                        return article.text.indexOf(this.state.filters.search) !== -1
+                    })
+                }
+
+                if ( this.state.filters.category ) {
+                    res = res.filter(article => {
+                        return article.category == this.state.filters.category
+                    })
+                }
+
+                return res.sort(this.sortBy)
+            }
+
+            handleFiltersChange(event, value) {
+                const filters = this.state.filters
+                filters[ event ] = value
+
+                this.setState({
+                    filters: filters
+                })
+            }
+
+            render() {
+                return (
+                    <div className="articles">
+                        <div className="articles__actions">
+                            <Actions
+                                categories={ this.getCategories() }
+                                filters={ this.state.filters }
+                                onFiltersChange= { this.handleFiltersChange }
+                            /></div>
+                        <div className="articles__collection"><Collection articles={ this.getArticleList() }/></div>
+                    </div>
+                )
+            }
+        }
+        
+        class Actions extends React.Component {
+            constructor(props) {
+                super(props)
+                this.state = {
+                    instances: [],
+                }
+                this.handleFiltersChange = this.handleFiltersChange.bind(this)
+            }
+
+            componentDidMount() {
+                const elems = document.querySelectorAll('select')
+                this.state.instances = M.FormSelect.init(elems, {})
+            }
+
+            componentWillUnmount() {
+                this.state.instances.forEach(instance => {
+                    if ( instance && instance.destroy ) {
+                        instance.destroy()
+                    }
+                })
+            }
+
+            handleFiltersChange(key, event) {
+                this.props.onFiltersChange(key, event.target.value)
+            }
+
+            render() {
+                const categoryList = this.props.categories.map((option, idx) => (
+                    <option key={ idx } value={ option }>{ option }</option>
+                ))
+
+                return (
+                    <div className="actions">
+                        <div className="actions__items">
+                            <div className="actions__item actions__item_w">
+                                <input placeholder="Search" type="text"
+                                    value={ this.props.filters.search }
+                                    onChange={ event => this.handleFiltersChange('search', event) }
+                                />
+                            </div>
+                            <div className="actions__item">
+                                <select value={ this.props.filters.order } onChange={ event => this.handleFiltersChange('order', event) }>
+                                    <option value="date">Order by date</option>
+                                    <option value="title">Order by title</option>
+                                </select>
+                            </div>
+                            <div className="actions__item">
+                                <select value={ this.props.filters.category } onChange={ event => this.handleFiltersChange('category', event) }>
+                                    <option value="">Filter by category</option>
+                                    { categoryList }
+                                </select>
+                            </div>
+                        </div>    
+                    </div>
+                )
+            }
+        }
+
+        function Collection(props) {
+            const articles = props.articles.map((article, idx) => (
+                <CollectionItem key={ idx } article={ article }/>
+            ))
+
+            return (
+                <ul className="collection">{ articles }</ul>
+            )
+        }
+
+        function CollectionItem(props) {
+            return (
+                <li className="collection-item article">
+                    <div className="article__image">
+                        <img src={ "http://placeimg.com/400/200/" + props.article.category + "/" + props.article.id } alt={ props.article.title }/>
+                    </div>
+                    <div className="article__body">
+                        <div className="article__title">{ props.article.title }</div>
+                        <div className="article__date">{ props.article.date.toLocaleDateString() }</div>
+                        <div className="article__text">{ props.article.text }</div>
+                    </div>
+                </li>
+            )
+        }
+
+        const domContainer = document.querySelector('#app');
+        ReactDOM.render(e(Content), domContainer);
+    </script>
+</body>
+</html>
